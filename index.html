@@ -741,7 +741,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// =========== DATA STORE (IndexedDB — works with file://) ===========
+// =========== DATA STORE (localStorage primary + IndexedDB backup) ===========
+const STORAGE_KEY = 'FamilyGatheringData';
 const DB_NAME = 'FamilyGathering';
 const DB_STORE = 'appData';
 const DB_KEY = 'main';
@@ -758,35 +759,91 @@ const defaultData = {
 let data = JSON.parse(JSON.stringify(defaultData));
 let db = null;
 
+// --- localStorage helpers (primary storage — fast, synchronous, reliable on GitHub Pages) ---
+function saveToLocalStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    return true;
+  } catch(e) {
+    console.warn('localStorage save failed:', e);
+    return false;
+  }
+}
+
+function loadFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return { ...defaultData, ...parsed };
+    }
+  } catch(e) {
+    console.warn('localStorage load failed:', e);
+  }
+  return null;
+}
+
+// --- IndexedDB helpers (secondary/backup storage) ---
 function openDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = e => e.target.result.createObjectStore(DB_STORE);
-    req.onsuccess = e => resolve(e.target.result);
-    req.onerror = e => reject(e.target.error);
+    try {
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = e => e.target.result.createObjectStore(DB_STORE);
+      req.onsuccess = e => resolve(e.target.result);
+      req.onerror = e => reject(e.target.error);
+    } catch(e) { reject(e); }
   });
 }
 
-function saveData() {
+function saveToIndexedDB() {
   if (!db) return;
-  const tx = db.transaction(DB_STORE, 'readwrite');
-  tx.objectStore(DB_STORE).put(JSON.parse(JSON.stringify(data)), DB_KEY);
+  try {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).put(JSON.parse(JSON.stringify(data)), DB_KEY);
+  } catch(e) {
+    console.warn('IndexedDB save failed:', e);
+  }
+}
+
+// --- Unified save: writes to both storages ---
+function saveData() {
+  saveToLocalStorage();
+  saveToIndexedDB();
 }
 
 function initApp() {
+  // First, try to load from localStorage (fast, synchronous)
+  const lsData = loadFromLocalStorage();
+
+  // Try to also open IndexedDB (for backup/migration)
   openDB().then(database => {
     db = database;
     const tx = db.transaction(DB_STORE, 'readonly');
     const req = tx.objectStore(DB_STORE).get(DB_KEY);
     req.onsuccess = e => {
-      if (e.target.result) {
-        data = { ...defaultData, ...e.target.result };
+      const idbData = e.target.result;
+      // Use whichever source has more data (prefer localStorage if both exist)
+      if (lsData) {
+        data = lsData;
+      } else if (idbData) {
+        // Migrate from IndexedDB to localStorage
+        data = { ...defaultData, ...idbData };
+        saveToLocalStorage(); // migrate
       }
       render();
       updateHeader();
     };
-    req.onerror = () => { render(); updateHeader(); };
-  }).catch(() => { render(); updateHeader(); });
+    req.onerror = () => {
+      if (lsData) data = lsData;
+      render();
+      updateHeader();
+    };
+  }).catch(() => {
+    // IndexedDB unavailable — use localStorage only
+    if (lsData) data = lsData;
+    render();
+    updateHeader();
+  });
 }
 
 let editMode = { type: null, id: null };
@@ -1206,7 +1263,7 @@ function importData(input) {
     try {
       const parsed = JSON.parse(e.target.result);
       data = { ...defaultData, ...parsed };
-      saveData();
+      saveData(); // saves to both localStorage + IndexedDB
       render();
       updateHeader();
       toast('✅ Data restored from backup!');

@@ -546,6 +546,10 @@
       <button class="tab-btn" onclick="switchTab('driving')"><span class="tab-icon">🚗</span> Driving <span class="tab-count" id="cnt-drives">0</span></button>
       <button class="tab-btn" onclick="switchTab('events')"><span class="tab-icon">📅</span> Schedule <span class="tab-count" id="cnt-events">0</span></button>
       <button class="tab-btn" onclick="switchTab('funeral')"><span class="tab-icon">🕊️</span> Service Details <span class="tab-count" id="cnt-funeral">0</span></button>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:4px;padding:0 8px;flex-shrink:0;">
+        <button class="tab-btn" onclick="exportData()" title="Download a backup of all your data" style="font-size:11px;">💾 Backup</button>
+        <label class="tab-btn" style="cursor:pointer;font-size:11px;" title="Restore from a backup file">📂 Restore<input type="file" accept=".json" style="display:none" onchange="importData(this)"></label>
+      </div>
     </div>
   </div>
 </nav>
@@ -737,8 +741,10 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// =========== DATA STORE ===========
-const STORAGE_KEY = 'familyGatheringData';
+// =========== DATA STORE (IndexedDB — works with file://) ===========
+const DB_NAME = 'FamilyGathering';
+const DB_STORE = 'appData';
+const DB_KEY = 'main';
 
 const defaultData = {
   settings: { title: 'Family Gathering', desc: 'Coordinating our family travel.', location: '', date: '' },
@@ -749,20 +755,39 @@ const defaultData = {
   funeral: []
 };
 
-function loadData() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return { ...defaultData, ...JSON.parse(saved) };
-  } catch(e) { console.warn('Could not load saved data:', e); }
-  return { ...defaultData };
+let data = JSON.parse(JSON.stringify(defaultData));
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(DB_STORE);
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e.target.error);
+  });
 }
 
 function saveData() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
-  catch(e) { console.warn('Could not save data:', e); }
+  if (!db) return;
+  const tx = db.transaction(DB_STORE, 'readwrite');
+  tx.objectStore(DB_STORE).put(JSON.parse(JSON.stringify(data)), DB_KEY);
 }
 
-let data = loadData();
+function initApp() {
+  openDB().then(database => {
+    db = database;
+    const tx = db.transaction(DB_STORE, 'readonly');
+    const req = tx.objectStore(DB_STORE).get(DB_KEY);
+    req.onsuccess = e => {
+      if (e.target.result) {
+        data = { ...defaultData, ...e.target.result };
+      }
+      render();
+      updateHeader();
+    };
+    req.onerror = () => { render(); updateHeader(); };
+  }).catch(() => { render(); updateHeader(); });
+}
 
 let editMode = { type: null, id: null };
 
@@ -1163,8 +1188,38 @@ document.querySelectorAll('.modal-overlay').forEach(o => {
   o.addEventListener('click', e => { if (e.target === o) { o.classList.remove('open'); editMode = { type: null, id: null }; } });
 });
 
+// =========== EXPORT / IMPORT ===========
+function exportData() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'family-gathering-backup.json';
+  a.click();
+  toast('💾 Backup downloaded!');
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      data = { ...defaultData, ...parsed };
+      saveData();
+      render();
+      updateHeader();
+      toast('✅ Data restored from backup!');
+    } catch {
+      toast('❌ Invalid backup file.');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
 // Init
-render();
+initApp();
 </script>
 </body>
 </html>

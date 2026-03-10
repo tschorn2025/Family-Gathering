@@ -738,7 +738,9 @@
 
 <script>
 // =========== DATA STORE ===========
-let data = {
+const STORAGE_KEY = 'familyGatheringData';
+
+const defaultData = {
   settings: { title: 'Family Gathering', desc: 'Coordinating our family travel.', location: '', date: '' },
   flights: [],
   hotels: [],
@@ -746,6 +748,21 @@ let data = {
   events: [],
   funeral: []
 };
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return { ...defaultData, ...JSON.parse(saved) };
+  } catch(e) { console.warn('Could not load saved data:', e); }
+  return { ...defaultData };
+}
+
+function saveData() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+  catch(e) { console.warn('Could not save data:', e); }
+}
+
+let data = loadData();
 
 let editMode = { type: null, id: null };
 
@@ -896,6 +913,7 @@ function saveEntry(type) {
     data[arrKey].push({ ...d, id: uid() });
     toast('✅ Added!');
   }
+  saveData();
   closeModal('modal-add');
   render();
 }
@@ -904,6 +922,7 @@ function deleteEntry(type, id) {
   if (!confirm('Remove this entry?')) return;
   const arrKey = type === 'drive' ? 'drives' : type === 'funeral' ? 'funeral' : type + 's';
   data[arrKey] = data[arrKey].filter(x => x.id !== id);
+  saveData();
   toast('🗑️ Removed');
   render();
 }
@@ -916,6 +935,7 @@ function saveSettings() {
     location: v('g-location') || '',
     date: v('g-date') || ''
   };
+  saveData();
   closeModal('modal-settings');
   updateHeader();
   toast('✅ Gathering details saved!');

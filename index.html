@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Family Gathering Travel Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FAF6F0;
+    --warm-white: #FDF9F4;
+    --amber: #C8833A;
+    --amber-light: #E8A85A;
+    --amber-pale: #FBF0E0;
+    --brown: #5C3D1E;
+    --brown-mid: #8B5E3C;
+    --sage: #7A8C6E;
+    --sage-light: #A8B89A;
+    --blush: #D4826A;
+    --text: #3A2A1A;
+    --text-mid: #6B4E35;
+    --shadow: rgba(92,61,30,0.12);
+    --border: rgba(200,131,58,0.2);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Lato', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* Decorative background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 10%, rgba(200,131,58,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(122,140,110,0.07) 0%, transparent 50%),
+      radial-gradient(ellipse 40% 60% at 60% 30%, rgba(212,130,106,0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--brown) 0%, var(--brown-mid) 60%, #A0703A 100%);
+    padding: 48px 0 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  header .container { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .header-badge {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 6px 18px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 16px;
+    font-weight: 700;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+  header h1 em {
+    font-style: italic;
+    color: var(--amber-light);
+  }
+  .header-subtitle {
+    color: rgba(255,255,255,0.7);
+    font-size: 15px;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+    margin-bottom: 28px;
+  }
+  .header-meta {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .header-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 30px;
+    padding: 7px 16px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 400;
+  }
+  .header-meta-item span { font-size: 16px; }
+
+  /* PROGRESS STRIP */
+  .progress-strip {
+    background: var(--amber-pale);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 0;
+  }
+  .progress-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stat-pill .num {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--amber);
+  }
+  .stat-pill .label { font-size: 12px; color: var(--text-mid); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+  .stat-divider { width: 1px; height: 28px; background: var(--border); }
+
+  /* NAV TABS */
+  .tabs-bar {
+    background: var(--warm-white);
+    border-bottom: 2px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px var(--shadow);
+  }
+  .tabs-inner {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs-inner::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    flex-shrink: 0;
+    padding: 16px 22px;
+    border: none;
+    background: none;
+    font-family: 'Lato', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-mid);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--amber); background: var(--amber-pale); }
+  .tab-btn.active { color: var(--amber); border-bottom-color: var(--amber); }
+  .tab-icon { font-size: 16px; }
+  .tab-count {
+    background: var(--amber);
+    color: white;
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 10px;
+    min-width: 18px;
+    text-align: center;
+  }
+
+  /* MAIN CONTENT */
+  main { padding: 32px 0 60px; }
+
+  .section { display: none; animation: fadeIn 0.3s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--brown);
+  }
+  .section-title small {
+    display: block;
+    font-family: 'Lato', sans-serif;
+    font-size: 13px;
+    color: var(--text-mid);
+    font-weight: 400;
+    margin-top: 2px;
+    letter-spacing: 0.3px;
+  }
+
+  /* BUTTONS */
+  .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Lato', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .btn-primary { background: var(--amber); color: white; }
+  .btn-primary:hover { background: #B8721E; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(200,131,58,0.35); }
+  .btn-secondary { background: var(--amber-pale); color: var(--brown); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: #F0DEC0; }
+  .btn-danger { background: #FEE8E4; color: #C0392B; border: 1px solid #F5C6C0; }
+  .btn-danger:hover { background: #FCCFCA; }
+  .btn-sm { padding: 6px 12px; font-size: 11px; }
+
+  /* CARDS */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px var(--shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px var(--shadow); }
+  .card-header {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .card-status {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .status-confirmed { background: #E6F4EA; color: #2D7A3A; }
+  .status-pending { background: #FFF3CD; color: #A07000; }
+  .status-cancelled { background: #FEE8E4; color: #C0392B; }
+  .card-body { padding: 18px; }
+  .card-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--brown);
+    margin-bottom: 12px;
+  }
+  .card-detail {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 13.5px;
+    color: var(--text-mid);
+    line-height: 1.4;
+  }
+  .card-detail .icon { font-size: 14px; margin-top: 1px; flex-shrink: 0; }
+  .card-detail strong { color: var(--text); }
+  .card-actions {
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    background: var(--amber-pale);
+  }
+  .card-color-bar { height: 4px; }
+  .color-flight { background: linear-gradient(90deg, #6B9BD2, #4A7BB5); }
+  .color-hotel { background: linear-gradient(90deg, #82B98A, #5A9E66); }
+  .color-drive { background: linear-gradient(90deg, #D4826A, #B86350); }
+  .color-event { background: linear-gradient(90deg, var(--amber), var(--amber-light)); }
+  .color-funeral { background: linear-gradient(90deg, #8B8BA0, #6B6B80); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-mid);
+  }
+  .empty-icon { font-size: 52px; margin-bottom: 16px; opacity: 0.5; }
+  .empty-state h3 { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 8px; color: var(--brown-mid); }
+  .empty-state p { font-size: 14px; margin-bottom: 24px; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(60,40,20,0.45);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--warm-white);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 540px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(60,40,20,0.25);
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  .modal-header {
+    padding: 24px 28px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h2 { font-family: 'Playfair Display', serif; font-size: 1.35rem; color: var(--brown); }
+  .modal-close {
+    width: 34px; height: 34px;
+    border: none; background: var(--amber-pale);
+    border-radius: 50%; cursor: pointer;
+    font-size: 18px; color: var(--brown);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .modal-close:hover { background: #F0DEC0; }
+  .modal-body { padding: 24px 28px; }
+  .modal-footer { padding: 16px 28px 24px; display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* FORM */
+  .form-row { margin-bottom: 18px; }
+  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+  label { display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-mid); margin-bottom: 6px; }
+  input, select, textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: white;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--amber);
+    box-shadow: 0 0 0 3px rgba(200,131,58,0.1);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+
+  /* EVENT SCHEDULE */
+  .timeline { position: relative; padding-left: 32px; }
+  .timeline::before { content: ''; position: absolute; left: 9px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+  .timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: 0 2px 10px var(--shadow);
+    transition: transform 0.2s;
+  }
+  .timeline-item:hover { transform: translateX(4px); }
+  .timeline-dot {
+    position: absolute;
+    left: -28px;
+    top: 18px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 3px solid var(--warm-white);
+    box-shadow: 0 0 0 2px var(--amber);
+    background: var(--amber);
+  }
+  .timeline-time { font-size: 11px; font-weight: 700; color: var(--amber); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .timeline-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 600; color: var(--brown); margin-bottom: 4px; }
+  .timeline-desc { font-size: 13px; color: var(--text-mid); }
+  .timeline-actions { margin-top: 10px; display: flex; gap: 8px; }
+
+  /* FUNERAL SECTION - dignified/muted */
+  .funeral-header-note {
+    background: linear-gradient(135deg, #EEEEF5, #F5F5FA);
+    border: 1px solid #CCCCE0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .funeral-header-note .note-icon { font-size: 22px; }
+  .funeral-header-note p { font-size: 13.5px; color: #5A5A7A; line-height: 1.6; }
+  .funeral-header-note strong { color: #3A3A5A; }
+
+  .card-header.funeral-style { background: #F0F0F7; }
+  .card-label.funeral { color: #5A5A7A; }
+
+  /* OVERVIEW / LANDING */
+  .overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .overview-card {
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 10px var(--shadow);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .overview-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px var(--shadow); }
+  .overview-icon { font-size: 36px; margin-bottom: 10px; }
+  .overview-card h3 { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--brown); margin-bottom: 4px; }
+  .overview-card p { font-size: 12px; color: var(--text-mid); }
+  .overview-card .big-num { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--amber); }
+
+  .gathering-info-box {
+    background: linear-gradient(135deg, var(--brown) 0%, var(--brown-mid) 100%);
+    border-radius: 16px;
+    padding: 28px;
+    color: white;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .gathering-info-box::after {
+    content: '🌿';
+    position: absolute;
+    right: 20px;
+    bottom: -10px;
+    font-size: 80px;
+    opacity: 0.1;
+  }
+  .gathering-info-box h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 8px; }
+  .gathering-info-box p { opacity: 0.8; font-size: 14px; margin-bottom: 16px; }
+  .info-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+  .info-chip { background: rgba(255,255,255,0.15); border-radius: 20px; padding: 6px 14px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .form-row-2 { grid-template-columns: 1fr; }
+    .header-meta { gap: 10px; }
+    .tab-btn { padding: 14px 14px; font-size: 11px; }
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--brown);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+    z-index: 999;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-badge">Family Gathering</div>
+    <h1>Travel <em>Arrangements</em></h1>
+    <p class="header-subtitle">Coordinating travel for our family — all in one place</p>
+    <div class="header-meta">
+      <div class="header-meta-item"><span>📍</span> <span id="hdr-location">Location TBD</span></div>
+      <div class="header-meta-item"><span>📅</span> <span id="hdr-date">Date TBD</span></div>
+      <div class="header-meta-item"><span>👨‍👩‍👧‍👦</span> <span id="hdr-members">0 Members</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="progress-strip">
+  <div class="container">
+    <div class="progress-inner">
+      <div class="stat-pill"><span class="num" id="stat-flights">0</span><span class="label">Flights</span></div>
+      <div class="stat-divider"></div>
+      <div class="stat-pill"><span class="num" id="stat-hotels">0</span><span class="label">Hotels</span></div>
+      <div class="stat-divider"></div>
+      <div class="stat-pill"><span class="num" id="stat-drives">0</span><span class="label">Drives</span></div>
+      <div class="stat-divider"></div>
+      <div class="stat-pill"><span class="num" id="stat-events">0</span><span class="label">Events</span></div>
+      <div class="stat-divider"></div>
+      <div class="stat-pill"><span class="num" id="stat-confirmed">0</span><span class="label">Confirmed</span></div>
+    </div>
+  </div>
+</div>
+
+<nav class="tabs-bar">
+  <div class="container">
+    <div class="tabs-inner">
+      <button class="tab-btn active" onclick="switchTab('overview')"><span class="tab-icon">🏡</span> Overview</button>
+      <button class="tab-btn" onclick="switchTab('flights')"><span class="tab-icon">✈️</span> Flights <span class="tab-count" id="cnt-flights">0</span></button>
+      <button class="tab-btn" onclick="switchTab('hotels')"><span class="tab-icon">🏨</span> Hotels <span class="tab-count" id="cnt-hotels">0</span></button>
+      <button class="tab-btn" onclick="switchTab('driving')"><span class="tab-icon">🚗</span> Driving <span class="tab-count" id="cnt-drives">0</span></button>
+      <button class="tab-btn" onclick="switchTab('events')"><span class="tab-icon">📅</span> Schedule <span class="tab-count" id="cnt-events">0</span></button>
+      <button class="tab-btn" onclick="switchTab('funeral')"><span class="tab-icon">🕊️</span> Service Details <span class="tab-count" id="cnt-funeral">0</span></button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="container">
+
+    <!-- OVERVIEW TAB -->
+    <div id="tab-overview" class="section active">
+      <div class="gathering-info-box">
+        <h2 id="ov-title">Family Gathering</h2>
+        <p id="ov-desc">Add details below to get started coordinating travel for your family.</p>
+        <div class="info-chips">
+          <div class="info-chip">📍 <span id="ov-loc">Location TBD</span></div>
+          <div class="info-chip">📅 <span id="ov-date">Date TBD</span></div>
+        </div>
+        <button class="btn btn-secondary" style="margin-top:18px; background:rgba(255,255,255,0.15); color:white; border-color:rgba(255,255,255,0.3);" onclick="openModal('modal-settings')">⚙️ Edit Gathering Details</button>
+      </div>
+      <div class="overview-grid">
+        <div class="overview-card" onclick="switchTab('flights')">
+          <div class="overview-icon">✈️</div>
+          <div class="big-num" id="ov-flights">0</div>
+          <h3>Flights</h3>
+          <p>Flight arrangements</p>
+        </div>
+        <div class="overview-card" onclick="switchTab('hotels')">
+          <div class="overview-icon">🏨</div>
+          <div class="big-num" id="ov-hotels">0</div>
+          <h3>Hotels</h3>
+          <p>Accommodations</p>
+        </div>
+        <div class="overview-card" onclick="switchTab('driving')">
+          <div class="overview-icon">🚗</div>
+          <div class="big-num" id="ov-drives">0</div>
+          <h3>Driving</h3>
+          <p>Road trips & carpools</p>
+        </div>
+        <div class="overview-card" onclick="switchTab('events')">
+          <div class="overview-icon">📅</div>
+          <div class="big-num" id="ov-events">0</div>
+          <h3>Events</h3>
+          <p>Schedule & activities</p>
+        </div>
+        <div class="overview-card" onclick="switchTab('funeral')">
+          <div class="overview-icon">🕊️</div>
+          <div class="big-num" id="ov-funeral">0</div>
+          <h3>Service Details</h3>
+          <p>Memorial arrangements</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLIGHTS TAB -->
+    <div id="tab-flights" class="section">
+      <div class="section-header">
+        <div class="section-title">✈️ Flights <small>Track all flight arrangements for family members</small></div>
+        <button class="btn btn-primary" onclick="openAddModal('flight')">+ Add Flight</button>
+      </div>
+      <div class="cards-grid" id="flights-grid">
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-icon">✈️</div>
+          <h3>No flights added yet</h3>
+          <p>Add flight details for each family member traveling by air.</p>
+          <button class="btn btn-primary" onclick="openAddModal('flight')">+ Add First Flight</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOTELS TAB -->
+    <div id="tab-hotels" class="section">
+      <div class="section-header">
+        <div class="section-title">🏨 Hotels & Accommodations <small>Where everyone is staying</small></div>
+        <button class="btn btn-primary" onclick="openAddModal('hotel')">+ Add Hotel</button>
+      </div>
+      <div class="cards-grid" id="hotels-grid">
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-icon">🏨</div>
+          <h3>No accommodations yet</h3>
+          <p>Add hotel and accommodation details for family members.</p>
+          <button class="btn btn-primary" onclick="openAddModal('hotel')">+ Add First Hotel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DRIVING TAB -->
+    <div id="tab-driving" class="section">
+      <div class="section-header">
+        <div class="section-title">🚗 Driving Directions <small>Road trips and carpools</small></div>
+        <button class="btn btn-primary" onclick="openAddModal('drive')">+ Add Drive</button>
+      </div>
+      <div class="cards-grid" id="drives-grid">
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-icon">🚗</div>
+          <h3>No driving plans yet</h3>
+          <p>Add road trip details and carpool arrangements.</p>
+          <button class="btn btn-primary" onclick="openAddModal('drive')">+ Add First Drive</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EVENTS TAB -->
+    <div id="tab-events" class="section">
+      <div class="section-header">
+        <div class="section-title">📅 Event Schedule <small>Full gathering itinerary</small></div>
+        <button class="btn btn-primary" onclick="openAddModal('event')">+ Add Event</button>
+      </div>
+      <div id="events-timeline" class="timeline">
+        <div class="empty-state" style="padding-left:0">
+          <div class="empty-icon">📅</div>
+          <h3>Schedule is empty</h3>
+          <p>Add events to build out the gathering itinerary.</p>
+          <button class="btn btn-primary" onclick="openAddModal('event')">+ Add First Event</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FUNERAL/SERVICE TAB -->
+    <div id="tab-funeral" class="section">
+      <div class="funeral-header-note">
+        <div class="note-icon">🕊️</div>
+        <p><strong>Memorial Service Details</strong><br>This section holds important information about the memorial service, arrangements, and logistics to help family coordinate with care and dignity.</p>
+      </div>
+      <div class="section-header">
+        <div class="section-title" style="color:#5A5A7A">Service & Memorial Details <small>Arrangements and logistics for the service</small></div>
+        <button class="btn btn-secondary" onclick="openAddModal('funeral')" style="border-color:#CCCCE0; color:#5A5A7A;">+ Add Detail</button>
+      </div>
+      <div class="cards-grid" id="funeral-grid">
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-icon">🕊️</div>
+          <h3>No details added yet</h3>
+          <p>Add service details, funeral home info, and memorial arrangements.</p>
+          <button class="btn btn-secondary" onclick="openAddModal('funeral')" style="border-color:#CCCCE0; color:#5A5A7A;">+ Add Detail</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- GATHERING SETTINGS MODAL -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>⚙️ Gathering Details</h2>
+      <button class="modal-close" onclick="closeModal('modal-settings')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Gathering Title</label>
+        <input type="text" id="g-title" placeholder="e.g. Johnson Family Reunion 2025">
+      </div>
+      <div class="form-row">
+        <label>Description</label>
+        <textarea id="g-desc" placeholder="Brief description of the gathering..."></textarea>
+      </div>
+      <div class="form-row-2">
+        <div>
+          <label>Location / City</label>
+          <input type="text" id="g-location" placeholder="e.g. Nashville, TN">
+        </div>
+        <div>
+          <label>Date(s)</label>
+          <input type="text" id="g-date" placeholder="e.g. July 4–7, 2025">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-settings')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save Details</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-add-title">Add Entry</h2>
+      <button class="modal-close" onclick="closeModal('modal-add')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-add-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add')">Cancel</button>
+      <button class="btn btn-primary" id="modal-add-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =========== DATA STORE ===========
+let data = {
+  settings: { title: 'Family Gathering', desc: 'Coordinating our family travel.', location: '', date: '' },
+  flights: [],
+  hotels: [],
+  drives: [],
+  events: [],
+  funeral: []
+};
+
+let editMode = { type: null, id: null };
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+// =========== TABS ===========
+function switchTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  const idx = ['overview','flights','hotels','driving','events','funeral'].indexOf(name);
+  document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+}
+
+// =========== MODALS ===========
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); editMode = { type: null, id: null }; }
+
+// =========== TOAST ===========
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// =========== FORMS ===========
+const forms = {
+  flight: {
+    title: '✈️ Flight Details',
+    fields: () => `
+      <div class="form-row"><label>Family Member(s)</label><input id="f-name" placeholder="e.g. Sarah & Tom Johnson"></div>
+      <div class="form-row-2">
+        <div><label>Airline</label><input id="f-airline" placeholder="e.g. Delta"></div>
+        <div><label>Flight Number</label><input id="f-num" placeholder="e.g. DL1234"></div>
+      </div>
+      <div class="form-row-2">
+        <div><label>Departure City</label><input id="f-from" placeholder="e.g. Atlanta, GA"></div>
+        <div><label>Arrival City</label><input id="f-to" placeholder="e.g. Nashville, TN"></div>
+      </div>
+      <div class="form-row-2">
+        <div><label>Departure Date & Time</label><input id="f-dep" type="datetime-local"></div>
+        <div><label>Arrival Date & Time</label><input id="f-arr" type="datetime-local"></div>
+      </div>
+      <div class="form-row-2">
+        <div><label>Confirmation #</label><input id="f-conf" placeholder="e.g. ABC123"></div>
+        <div><label>Status</label><select id="f-status"><option>Confirmed</option><option>Pending</option><option>Cancelled</option></select></div>
+      </div>
+      <div class="form-row"><label>Notes</label><textarea id="f-notes" placeholder="Seat numbers, baggage, etc."></textarea></div>`,
+    get: () => ({ name: v('f-name'), airline: v('f-airline'), num: v('f-num'), from: v('f-from'), to: v('f-to'), dep: v('f-dep'), arr: v('f-arr'), conf: v('f-conf'), status: v('f-status'), notes: v('f-notes') }),
+    set: (d) => { sv('f-name',d.name); sv('f-airline',d.airline); sv('f-num',d.num); sv('f-from',d.from); sv('f-to',d.to); sv('f-dep',d.dep); sv('f-arr',d.arr); sv('f-conf',d.conf); sv('f-status',d.status); sv('f-notes',d.notes); }
+  },
+  hotel: {
+    title: '🏨 Hotel / Accommodation',
+    fields: () => `
+      <div class="form-row"><label>Family Member(s)</label><input id="h-name" placeholder="e.g. The Williams Family"></div>
+      <div class="form-row"><label>Hotel / Property Name</label><input id="h-hotel" placeholder="e.g. Marriott Downtown Nashville"></div>
+      <div class="form-row"><label>Address</label><input id="h-addr" placeholder="Full address"></div>
+      <div class="form-row-2">
+        <div><label>Check-In Date</label><input id="h-in" type="date"></div>
+        <div><label>Check-Out Date</label><input id="h-out" type="date"></div>
+      </div>
+      <div class="form-row-2">
+        <div><label>Confirmation #</label><input id="h-conf" placeholder="e.g. 7483920"></div>
+        <div><label>Status</label><select id="h-status"><option>Confirmed</option><option>Pending</option><option>Cancelled</option></select></div>
+      </div>
+      <div class="form-row"><label>Notes</label><textarea id="h-notes" placeholder="Room type, special requests, etc."></textarea></div>`,
+    get: () => ({ name: v('h-name'), hotel: v('h-hotel'), addr: v('h-addr'), in: v('h-in'), out: v('h-out'), conf: v('h-conf'), status: v('h-status'), notes: v('h-notes') }),
+    set: (d) => { sv('h-name',d.name); sv('h-hotel',d.hotel); sv('h-addr',d.addr); sv('h-in',d['in']); sv('h-out',d.out); sv('h-conf',d.conf); sv('h-status',d.status); sv('h-notes',d.notes); }
+  },
+  drive: {
+    title: '🚗 Driving Details',
+    fields: () => `
+      <div class="form-row"><label>Family Member(s)</label><input id="d-name" placeholder="e.g. Uncle Mike & family"></div>
+      <div class="form-row-2">
+        <div><label>Departing From</label><input id="d-from" placeholder="e.g. Charlotte, NC"></div>
+        <div><label>Destination</label><input id="d-to" placeholder="e.g. Nashville, TN"></div>
+      </div>
+      <div class="form-row-2">
+        <div><label>Departure Date & Time</label><input id="d-dep" type="datetime-local"></div>
+        <div><label>Est. Arrival</label><input id="d-arr" type="datetime-local"></div>
+      </div>
+      <div class="form-row-2">
+        <div><label>Est. Distance</label><input id="d-dist" placeholder="e.g. 410 miles"></div>
+        <div><label>Status</label><select id="d-status"><option>Confirmed</option><option>Pending</option><option>Cancelled</option></select></div>
+      </div>
+      <div class="form-row"><label>Passengers / Carpool</label><input id="d-pass" placeholder="Who's riding along?"></div>
+      <div class="form-row"><label>Notes</label><textarea id="d-notes" placeholder="Stops, route notes, etc."></textarea></div>`,
+    get: () => ({ name: v('d-name'), from: v('d-from'), to: v('d-to'), dep: v('d-dep'), arr: v('d-arr'), dist: v('d-dist'), status: v('d-status'), pass: v('d-pass'), notes: v('d-notes') }),
+    set: (d) => { sv('d-name',d.name); sv('d-from',d.from); sv('d-to',d.to); sv('d-dep',d.dep); sv('d-arr',d.arr); sv('d-dist',d.dist); sv('d-status',d.status); sv('d-pass',d.pass); sv('d-notes',d.notes); }
+  },
+  event: {
+    title: '📅 Add Event / Activity',
+    fields: () => `
+      <div class="form-row"><label>Event Name</label><input id="e-name" placeholder="e.g. Welcome Dinner"></div>
+      <div class="form-row-2">
+        <div><label>Date</label><input id="e-date" type="date"></div>
+        <div><label>Time</label><input id="e-time" type="time"></div>
+      </div>
+      <div class="form-row"><label>Location / Venue</label><input id="e-loc" placeholder="e.g. Grandma's House, 123 Oak St"></div>
+      <div class="form-row"><label>Description</label><textarea id="e-desc" placeholder="What's happening, who should attend, etc."></textarea></div>`,
+    get: () => ({ name: v('e-name'), date: v('e-date'), time: v('e-time'), loc: v('e-loc'), desc: v('e-desc') }),
+    set: (d) => { sv('e-name',d.name); sv('e-date',d.date); sv('e-time',d.time); sv('e-loc',d.loc); sv('e-desc',d.desc); }
+  },
+  funeral: {
+    title: '🕊️ Service / Memorial Detail',
+    fields: () => `
+      <div class="form-row"><label>Category</label><select id="fn-cat"><option>Funeral Home Info</option><option>Service Schedule</option><option>Burial / Interment</option><option>Reception / Gathering</option><option>Flowers & Tributes</option><option>Transportation</option><option>Other Arrangement</option></select></div>
+      <div class="form-row"><label>Title / Label</label><input id="fn-name" placeholder="e.g. Graveside Service"></div>
+      <div class="form-row-2">
+        <div><label>Date</label><input id="fn-date" type="date"></div>
+        <div><label>Time</label><input id="fn-time" type="time"></div>
+      </div>
+      <div class="form-row"><label>Location / Address</label><input id="fn-loc" placeholder="Venue or address"></div>
+      <div class="form-row"><label>Contact / Point of Contact</label><input id="fn-contact" placeholder="Name and phone/email"></div>
+      <div class="form-row"><label>Notes / Details</label><textarea id="fn-notes" placeholder="Additional information, dress code, parking, etc."></textarea></div>`,
+    get: () => ({ cat: v('fn-cat'), name: v('fn-name'), date: v('fn-date'), time: v('fn-time'), loc: v('fn-loc'), contact: v('fn-contact'), notes: v('fn-notes') }),
+    set: (d) => { sv('fn-cat',d.cat); sv('fn-name',d.name); sv('fn-date',d.date); sv('fn-time',d.time); sv('fn-loc',d.loc); sv('fn-contact',d.contact); sv('fn-notes',d.notes); }
+  }
+};
+
+function v(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function sv(id, val) { const el = document.getElementById(id); if (el && val !== undefined) el.value = val || ''; }
+
+function openAddModal(type, id = null) {
+  const f = forms[type];
+  document.getElementById('modal-add-title').textContent = id ? f.title.replace('Add','Edit') : f.title;
+  document.getElementById('modal-add-body').innerHTML = f.fields();
+  editMode = { type, id };
+  if (id) {
+    const arr = data[type === 'drive' ? 'drives' : type === 'funeral' ? 'funeral' : type + 's'];
+    const item = arr.find(x => x.id === id);
+    if (item) f.set(item);
+  }
+  document.getElementById('modal-add-save').onclick = () => saveEntry(type);
+  openModal('modal-add');
+}
+
+function saveEntry(type) {
+  const f = forms[type];
+  const d = f.get();
+  const arrKey = type === 'drive' ? 'drives' : type === 'funeral' ? 'funeral' : type + 's';
+  if (editMode.id) {
+    const idx = data[arrKey].findIndex(x => x.id === editMode.id);
+    if (idx > -1) data[arrKey][idx] = { ...d, id: editMode.id };
+    toast('✅ Updated!');
+  } else {
+    data[arrKey].push({ ...d, id: uid() });
+    toast('✅ Added!');
+  }
+  closeModal('modal-add');
+  render();
+}
+
+function deleteEntry(type, id) {
+  if (!confirm('Remove this entry?')) return;
+  const arrKey = type === 'drive' ? 'drives' : type === 'funeral' ? 'funeral' : type + 's';
+  data[arrKey] = data[arrKey].filter(x => x.id !== id);
+  toast('🗑️ Removed');
+  render();
+}
+
+// =========== SETTINGS ===========
+function saveSettings() {
+  data.settings = {
+    title: v('g-title') || 'Family Gathering',
+    desc: v('g-desc') || '',
+    location: v('g-location') || '',
+    date: v('g-date') || ''
+  };
+  closeModal('modal-settings');
+  updateHeader();
+  toast('✅ Gathering details saved!');
+}
+
+function openSettingsModal() {
+  sv('g-title', data.settings.title);
+  sv('g-desc', data.settings.desc);
+  sv('g-location', data.settings.location);
+  sv('g-date', data.settings.date);
+  openModal('modal-settings');
+}
+// Override the button call
+document.querySelector('[onclick="openModal(\'modal-settings\')"]').onclick = openSettingsModal;
+
+function updateHeader() {
+  const s = data.settings;
+  document.getElementById('hdr-location').textContent = s.location || 'Location TBD';
+  document.getElementById('hdr-date').textContent = s.date || 'Date TBD';
+  document.getElementById('ov-title').textContent = s.title;
+  document.getElementById('ov-desc').textContent = s.desc || 'Add details to get started coordinating travel.';
+  document.getElementById('ov-loc').textContent = s.location || 'Location TBD';
+  document.getElementById('ov-date').textContent = s.date || 'Date TBD';
+}
+
+// =========== STATUS BADGE ===========
+function statusBadge(s) {
+  const map = { 'Confirmed': 'status-confirmed', 'Pending': 'status-pending', 'Cancelled': 'status-cancelled' };
+  return `<span class="card-status ${map[s] || 'status-pending'}">${s || 'Pending'}</span>`;
+}
+
+function fmtDT(val) {
+  if (!val) return '';
+  try { return new Date(val).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); }
+  catch { return val; }
+}
+function fmtDate(val) {
+  if (!val) return '';
+  try { return new Date(val + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' }); }
+  catch { return val; }
+}
+
+// =========== RENDER ===========
+function render() {
+  renderFlights();
+  renderHotels();
+  renderDrives();
+  renderEvents();
+  renderFuneral();
+  updateCounts();
+  updateHeader();
+}
+
+function renderFlights() {
+  const grid = document.getElementById('flights-grid');
+  if (!data.flights.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">✈️</div><h3>No flights added yet</h3><p>Add flight details for each family member traveling by air.</p><button class="btn btn-primary" onclick="openAddModal('flight')">+ Add First Flight</button></div>`;
+    return;
+  }
+  grid.innerHTML = data.flights.map(f => `
+    <div class="card">
+      <div class="card-color-bar color-flight"></div>
+      <div class="card-header">
+        <span class="card-label" style="color:#4A7BB5">✈️ Flight</span>
+        ${statusBadge(f.status)}
+      </div>
+      <div class="card-body">
+        <div class="card-name">${f.name || 'Family Member'}</div>
+        <div class="card-detail"><span class="icon">🛫</span><div><strong>${f.from || '—'}</strong> → <strong>${f.to || '—'}</strong></div></div>
+        ${f.airline ? `<div class="card-detail"><span class="icon">🏢</span><div>${f.airline}${f.num ? ' · ' + f.num : ''}</div></div>` : ''}
+        ${f.dep ? `<div class="card-detail"><span class="icon">🕐</span><div>Departs: ${fmtDT(f.dep)}</div></div>` : ''}
+        ${f.arr ? `<div class="card-detail"><span class="icon">🕓</span><div>Arrives: ${fmtDT(f.arr)}</div></div>` : ''}
+        ${f.conf ? `<div class="card-detail"><span class="icon">🎫</span><div>Conf: <strong>${f.conf}</strong></div></div>` : ''}
+        ${f.notes ? `<div class="card-detail"><span class="icon">📝</span><div>${f.notes}</div></div>` : ''}
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openAddModal('flight','${f.id}')">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteEntry('flight','${f.id}')">🗑️ Remove</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderHotels() {
+  const grid = document.getElementById('hotels-grid');
+  if (!data.hotels.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🏨</div><h3>No accommodations yet</h3><p>Add hotel and accommodation details.</p><button class="btn btn-primary" onclick="openAddModal('hotel')">+ Add First Hotel</button></div>`;
+    return;
+  }
+  grid.innerHTML = data.hotels.map(h => `
+    <div class="card">
+      <div class="card-color-bar color-hotel"></div>
+      <div class="card-header">
+        <span class="card-label" style="color:#5A9E66">🏨 Hotel</span>
+        ${statusBadge(h.status)}
+      </div>
+      <div class="card-body">
+        <div class="card-name">${h.name || 'Family Member'}</div>
+        <div class="card-detail"><span class="icon">🏢</span><div><strong>${h.hotel || '—'}</strong></div></div>
+        ${h.addr ? `<div class="card-detail"><span class="icon">📍</span><div>${h.addr}</div></div>` : ''}
+        ${h.in ? `<div class="card-detail"><span class="icon">📅</span><div>Check-in: <strong>${fmtDate(h['in'])}</strong></div></div>` : ''}
+        ${h.out ? `<div class="card-detail"><span class="icon">📅</span><div>Check-out: <strong>${fmtDate(h.out)}</strong></div></div>` : ''}
+        ${h.conf ? `<div class="card-detail"><span class="icon">🎫</span><div>Conf: <strong>${h.conf}</strong></div></div>` : ''}
+        ${h.notes ? `<div class="card-detail"><span class="icon">📝</span><div>${h.notes}</div></div>` : ''}
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openAddModal('hotel','${h.id}')">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteEntry('hotel','${h.id}')">🗑️ Remove</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderDrives() {
+  const grid = document.getElementById('drives-grid');
+  if (!data.drives.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🚗</div><h3>No driving plans yet</h3><p>Add road trip details and carpool arrangements.</p><button class="btn btn-primary" onclick="openAddModal('drive')">+ Add First Drive</button></div>`;
+    return;
+  }
+  grid.innerHTML = data.drives.map(d => `
+    <div class="card">
+      <div class="card-color-bar color-drive"></div>
+      <div class="card-header">
+        <span class="card-label" style="color:#B86350">🚗 Drive</span>
+        ${statusBadge(d.status)}
+      </div>
+      <div class="card-body">
+        <div class="card-name">${d.name || 'Family Member'}</div>
+        <div class="card-detail"><span class="icon">🗺️</span><div><strong>${d.from || '—'}</strong> → <strong>${d.to || '—'}</strong></div></div>
+        ${d.dep ? `<div class="card-detail"><span class="icon">🕐</span><div>Departs: ${fmtDT(d.dep)}</div></div>` : ''}
+        ${d.arr ? `<div class="card-detail"><span class="icon">🏁</span><div>Est. Arrival: ${fmtDT(d.arr)}</div></div>` : ''}
+        ${d.dist ? `<div class="card-detail"><span class="icon">📏</span><div>${d.dist}</div></div>` : ''}
+        ${d.pass ? `<div class="card-detail"><span class="icon">👥</span><div>${d.pass}</div></div>` : ''}
+        ${d.notes ? `<div class="card-detail"><span class="icon">📝</span><div>${d.notes}</div></div>` : ''}
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openAddModal('drive','${d.id}')">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteEntry('drive','${d.id}')">🗑️ Remove</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderEvents() {
+  const tl = document.getElementById('events-timeline');
+  if (!data.events.length) {
+    tl.innerHTML = `<div class="empty-state" style="padding-left:0"><div class="empty-icon">📅</div><h3>Schedule is empty</h3><p>Add events to build out the gathering itinerary.</p><button class="btn btn-primary" onclick="openAddModal('event')">+ Add First Event</button></div>`;
+    return;
+  }
+  const sorted = [...data.events].sort((a, b) => {
+    const da = new Date(a.date + 'T' + (a.time || '00:00'));
+    const db = new Date(b.date + 'T' + (b.time || '00:00'));
+    return da - db;
+  });
+  tl.innerHTML = sorted.map(e => `
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-time">${e.date ? fmtDate(e.date) : ''}${e.time ? ' · ' + e.time : ''}</div>
+      <div class="timeline-title">${e.name || 'Event'}</div>
+      ${e.loc ? `<div class="card-detail" style="margin-top:6px"><span class="icon">📍</span><div>${e.loc}</div></div>` : ''}
+      ${e.desc ? `<div class="card-detail"><span class="icon">📝</span><div>${e.desc}</div></div>` : ''}
+      <div class="timeline-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openAddModal('event','${e.id}')">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteEntry('event','${e.id}')">🗑️ Remove</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderFuneral() {
+  const grid = document.getElementById('funeral-grid');
+  if (!data.funeral.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🕊️</div><h3>No details added yet</h3><p>Add service details, funeral home info, and memorial arrangements.</p><button class="btn btn-secondary" onclick="openAddModal('funeral')" style="border-color:#CCCCE0; color:#5A5A7A;">+ Add Detail</button></div>`;
+    return;
+  }
+  grid.innerHTML = data.funeral.map(fn => `
+    <div class="card">
+      <div class="card-color-bar color-funeral"></div>
+      <div class="card-header funeral-style">
+        <span class="card-label funeral">🕊️ ${fn.cat || 'Service Detail'}</span>
+      </div>
+      <div class="card-body">
+        <div class="card-name" style="color:#3A3A5A">${fn.name || 'Detail'}</div>
+        ${fn.date ? `<div class="card-detail"><span class="icon">📅</span><div>${fmtDate(fn.date)}${fn.time ? ' at ' + fn.time : ''}</div></div>` : ''}
+        ${fn.loc ? `<div class="card-detail"><span class="icon">📍</span><div>${fn.loc}</div></div>` : ''}
+        ${fn.contact ? `<div class="card-detail"><span class="icon">📞</span><div>${fn.contact}</div></div>` : ''}
+        ${fn.notes ? `<div class="card-detail"><span class="icon">📝</span><div>${fn.notes}</div></div>` : ''}
+      </div>
+      <div class="card-actions" style="background:#EEEEF5">
+        <button class="btn btn-secondary btn-sm" onclick="openAddModal('funeral','${fn.id}')" style="border-color:#CCCCE0;">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteEntry('funeral','${fn.id}')">🗑️ Remove</button>
+      </div>
+    </div>`).join('');
+}
+
+function updateCounts() {
+  const f = data.flights.length, h = data.hotels.length, dr = data.drives.length, ev = data.events.length, fn = data.funeral.length;
+  const all = [...data.flights, ...data.hotels, ...data.drives];
+  const conf = all.filter(x => x.status === 'Confirmed').length;
+  const totalMembers = new Set([
+    ...data.flights.map(x => x.name),
+    ...data.hotels.map(x => x.name),
+    ...data.drives.map(x => x.name)
+  ].filter(Boolean)).size;
+
+  document.getElementById('stat-flights').textContent = f;
+  document.getElementById('stat-hotels').textContent = h;
+  document.getElementById('stat-drives').textContent = dr;
+  document.getElementById('stat-events').textContent = ev;
+  document.getElementById('stat-confirmed').textContent = conf;
+
+  document.getElementById('cnt-flights').textContent = f;
+  document.getElementById('cnt-hotels').textContent = h;
+  document.getElementById('cnt-drives').textContent = dr;
+  document.getElementById('cnt-events').textContent = ev;
+  document.getElementById('cnt-funeral').textContent = fn;
+
+  document.getElementById('ov-flights').textContent = f;
+  document.getElementById('ov-hotels').textContent = h;
+  document.getElementById('ov-drives').textContent = dr;
+  document.getElementById('ov-events').textContent = ev;
+  document.getElementById('ov-funeral').textContent = fn;
+
+  document.getElementById('hdr-members').textContent = totalMembers + ' Member' + (totalMembers !== 1 ? 's' : '');
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) { o.classList.remove('open'); editMode = { type: null, id: null }; } });
+});
+
+// Init
+render();
+</script>
+</body>
+</html>
